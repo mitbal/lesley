@@ -90,3 +90,21 @@ def month_plot(dates, values, month, title=''):
 
     return chart
 
+
+# create function to make calendar heatmap for all months
+def calendar_plot(dates, values):
+    
+    charts = [alt.Chart()]*12
+    for i in range(12):
+        c = month_plot(dates, values, month=i+1)
+        charts[i] = c
+
+    # format display
+    full = alt.vconcat()
+    for i in range(3):
+        chart = alt.hconcat()
+        for j in range(4):
+            chart |= charts[i*4+j]
+        full &= chart
+
+    return full
