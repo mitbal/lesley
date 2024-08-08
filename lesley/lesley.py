@@ -24,6 +24,7 @@ def gen_expr(d):
     return expr
 
 
+# create function to generate calendar heatmap
 def cal_heatmap(dates, values):
 
     df = pd.DataFrame({'dates': dates, 'values': values})
@@ -57,6 +58,34 @@ def cal_heatmap(dates, values):
         grid=False
     ).configure_view(
         stroke=None
+    )
+
+    return chart
+
+# create function to make heatmap for one month only
+def month_plot(dates, values, month, title=''):
+    df = pd.DataFrame({'dates': dates, 'values': values})
+    df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%a'))
+    df['weeks'] = df['dates'].apply(lambda x: 'Week '+x.to_pydatetime().strftime('%W'))
+    df['months'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%B'))
+
+    month_name = calendar.month_name[month]
+    df_month = df[df['months'] == month_name].reset_index()
+
+    days = list(calendar.day_abbr)
+
+    chart = alt.Chart(df_month).mark_rect(cornerRadius=5, width=20, height=20).encode(
+        alt.X('days', sort=days).axis(tickSize=0, domain=False, labelFontSize=15, orient='top', labelAngle=0),
+        alt.Y('weeks:N').axis(tickSize=1, domain=False, labelAngle=0, labelFontSize=0),
+        alt.Color('values', legend=None),
+        tooltip=[
+            alt.Tooltip('dates', title='Date'),
+            alt.Tooltip('values', title='Value')
+        ]
+    ).properties(
+        height=150,
+        width=200,
+        title=title
     )
 
     return chart
