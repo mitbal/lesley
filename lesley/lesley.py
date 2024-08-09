@@ -23,20 +23,34 @@ def gen_expr(d):
 
     return expr
 
+# derived extra columns and fill missing rows
+def prep_data(dates, values):
+
+    start_date = dates.sort_values()[0]
+    get_year = start_date.year
+
+    full_year = pd.date_range(start=str(get_year)+'-01-01', end=str(get_year)+'-12-31')
+    full_values = [0]*len(full_year)
+
+    full_df = pd.DataFrame({'dates': full_year, 'values': full_values})
+    input_df = pd.DataFrame({'dates': dates, 'values': values})
+
+    df = full_df.merge(input_df, how='left', on='dates')[['dates', 'values_y']].rename(columns={'values_y': 'values'})
+    df['values'] = df['values'].fillna(0)
+
+    df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%A'))
+    df['weeks'] = df['dates'].apply(lambda x: 'Week '+x.to_pydatetime().strftime('%W'))
+
+    return df
 
 # create function to generate calendar heatmap
 def cal_heatmap(dates, values):
 
-    df = pd.DataFrame({'dates': dates, 'values': values})
-    df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%A'))
-    df['weeks'] = df['dates'].apply(lambda x: 'Week '+x.to_pydatetime().strftime('%W'))
-
-    days = list(calendar.day_name)
-    # weeks = calendar
-
+    df = prep_data(dates, values)
     mapping = make_month_mapping()
     expr = gen_expr(mapping)
 
+    days = list(calendar.day_name)
     chart = alt.Chart(df).mark_rect(cornerRadius=5, width=20, height=20).encode(
         alt.Y('days', sort=days).axis(tickSize=0, domain=False, values=['Monday', 'Thursday', 'Sunday'], labelFontSize=15),
         alt.X('weeks:N').axis(tickSize=1, domain=False, title='Months', labelExpr=expr, labelAngle=0, labelFontSize=15),
