@@ -4,6 +4,7 @@ import calendar
 import numpy as np
 import pandas as pd
 import altair as alt
+import seaborn as sns
 
 # create mapping from category used in the plot, to the label displayed
 def make_month_mapping():
@@ -44,17 +45,20 @@ def prep_data(dates, values):
     return df
 
 # create function to generate calendar heatmap
-def cal_heatmap(dates, values):
+def cal_heatmap(dates, values, cmap='YlGn'):
 
     df = prep_data(dates, values)
     mapping = make_month_mapping()
     expr = gen_expr(mapping)
 
+    domain = np.sort(np.unique(values))
+    range_ = sns.color_palette(cmap, len(domain)).as_hex()
+
     days = list(calendar.day_name)
     chart = alt.Chart(df).mark_rect(cornerRadius=5, width=20, height=20).encode(
         alt.Y('days', sort=days).axis(tickSize=0, domain=False, values=['Monday', 'Thursday', 'Sunday'], labelFontSize=15),
         alt.X('weeks:N').axis(tickSize=1, domain=False, title='Months', labelExpr=expr, labelAngle=0, labelFontSize=15),
-        alt.Color('values'),
+        alt.Color('values').scale(domain=domain, range=range_),
         tooltip=[
             alt.Tooltip('dates', title='Date'),
             alt.Tooltip('values', title='Value')
