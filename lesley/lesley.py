@@ -118,26 +118,28 @@ def month_plot(dates, values, month, title='', border=False, cmap='YlGn'):
     ).properties(
         height=150,
         width=200,
-        title=title
+        title=title,
+        view=alt.ViewConfig(strokeWidth=0)
     )
 
     return chart
 
 
 # create function to make calendar heatmap for all months
-def calendar_plot(dates, values):
+def calendar_plot(dates, values, cmap='YlGn', nrows=3):
     
     charts = [alt.Chart()]*12
     for i in range(12):
-        c = month_plot(dates, values, month=i+1)
+        c = month_plot(dates, values, month=i+1, cmap=cmap)
         charts[i] = c
 
     # format display
     full = alt.vconcat()
-    for i in range(3):
+    for i in range(nrows):
         chart = alt.hconcat()
-        for j in range(4):
-            chart |= charts[i*4+j]
+        ncols = int(12/nrows)
+        for j in range(ncols):
+            chart |= charts[i*ncols+j]
         full &= chart
 
     return full
