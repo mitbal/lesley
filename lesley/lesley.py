@@ -11,7 +11,7 @@ def make_month_mapping():
     d = {}
 
     for i in range(12):
-        d[f'Week {int(i*4.5+1):02d}'] = f'{calendar.month_name[i+1]}'
+        d[f'Week {int(i*4.5+1):02d}'] = f'{calendar.month_abbr[i+1]}'
 
     return d
 
@@ -39,7 +39,7 @@ def prep_data(dates, values):
     df = full_df.merge(input_df, how='left', on='dates')[['dates', 'values_y']].rename(columns={'values_y': 'values'})
     df['values'] = df['values'].fillna(0)
 
-    df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%A'))
+    df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%a'))
     df['weeks'] = df['dates'].apply(lambda x: 'Week '+x.to_pydatetime().strftime('%W'))
 
     return df
@@ -56,9 +56,9 @@ def cal_heatmap(dates, values, cmap='YlGn'):
 
     days = list(calendar.day_name)
     chart = alt.Chart(df).mark_rect(cornerRadius=5, width=20, height=20).encode(
-        alt.Y('days', sort=days).axis(tickSize=0, domain=False, values=['Monday', 'Thursday', 'Sunday'], labelFontSize=15),
-        alt.X('weeks:N').axis(tickSize=1, domain=False, title='Months', labelExpr=expr, labelAngle=0, labelFontSize=15),
-        alt.Color('values').scale(domain=domain, range=range_),
+        alt.Y('days', sort=days).axis(tickSize=0, title='', domain=False, values=['Mon', 'Thu', 'Sun'], labelFontSize=15),
+        alt.X('weeks:N').axis(tickSize=1, domain=False, title='', labelExpr=expr, labelAngle=0, labelFontSize=15),
+        alt.Color('values', legend=None).scale(domain=domain, range=range_),
         tooltip=[
             alt.Tooltip('dates', title='Date'),
             alt.Tooltip('values', title='Value')
