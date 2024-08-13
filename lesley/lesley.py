@@ -53,7 +53,7 @@ def prep_data(dates, values):
     return df
 
 # create function to generate calendar heatmap
-def cal_heatmap(dates, values, cmap='YlGn'):
+def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
 
     df = prep_data(dates, values)
     mapping = make_month_mapping()
@@ -74,8 +74,8 @@ def cal_heatmap(dates, values, cmap='YlGn'):
         ]
     ).properties(
         title=year,
-        height=180,
-        width=1200
+        height=height,
+        width=width
     ).configure_scale(
         rectBandPaddingInner=0.1,
     ).configure_mark(
@@ -91,7 +91,7 @@ def cal_heatmap(dates, values, cmap='YlGn'):
     return chart
 
 # create function to make heatmap for one month only
-def month_plot(dates, values, month, title='', border=False, cmap='YlGn'):
+def month_plot(dates, values, month, title='', border=False, cmap='YlGn', height=150, width=200):
     df = pd.DataFrame({'dates': dates, 'values': values})
     df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%a'))
     df['weeks'] = df['dates'].apply(lambda x: 'Week '+x.to_pydatetime().strftime('%W'))
@@ -116,14 +116,13 @@ def month_plot(dates, values, month, title='', border=False, cmap='YlGn'):
             alt.Tooltip('values', title='Value')
         ]
     ).properties(
-        height=150,
-        width=200,
+        height=height,
+        width=width,
         title=title,
         view=alt.ViewConfig(strokeWidth=0)
     )
 
     return chart
-
 
 # create function to make calendar heatmap for all months
 def calendar_plot(dates, values, cmap='YlGn', nrows=3):
