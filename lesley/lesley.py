@@ -127,6 +127,10 @@ def month_plot(dates, values, month, title='', border=False, cmap='YlGn', height
 # create function to make calendar heatmap for all months
 def calendar_plot(dates, values, cmap='YlGn', nrows=3):
     
+    valid_nrows = [1, 2, 3, 4, 6, 12]
+    if nrows not in valid_nrows:
+        raise ValueError(f'calendar_plot: nrows must be a factor of 12, i.e {valid_nrows}')
+
     charts = [alt.Chart()]*12
     for i in range(12):
         c = month_plot(dates, values, month=i+1, cmap=cmap)
