@@ -63,7 +63,7 @@ def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
     range_ = sns.color_palette(cmap, len(domain)).as_hex()
 
     year = str(df['dates'].iloc[0].year)
-    days = list(calendar.day_name)
+    days = list(calendar.day_abbr)
     chart = alt.Chart(df).mark_rect(cornerRadius=5, width=20, height=20).encode(
         alt.Y('days', sort=days).axis(tickSize=0, title='', domain=False, values=['Mon', 'Thu', 'Sun'], labelFontSize=15),
         alt.X('weeks:N').axis(tickSize=1, domain=False, title='', labelExpr=expr, labelAngle=0, labelFontSize=15),
