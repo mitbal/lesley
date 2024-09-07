@@ -65,9 +65,9 @@ def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
     year = str(df['dates'].iloc[0].year)
     days = list(calendar.day_abbr)
     chart = alt.Chart(df).mark_rect(cornerRadius=5, width=20, height=20).encode(
-        alt.Y('days', sort=days).axis(tickSize=0, title='', domain=False, values=['Mon', 'Thu', 'Sun'], labelFontSize=15),
-        alt.X('weeks:N').axis(tickSize=1, domain=False, title='', labelExpr=expr, labelAngle=0, labelFontSize=15),
-        alt.Color('values', legend=None).scale(domain=domain, range=range_),
+        y=alt.Y('days', sort=days, axis=alt.Axis(tickSize=0, title='', domain=False, values=['Mon', 'Thu', 'Sun'], labelFontSize=15)),
+        x=alt.X('weeks:N', axis=alt.Axis(tickSize=0, domain=False, title='', labelExpr=expr, labelAngle=0, labelFontSize=15)),
+        color=alt.Color('values', legend=None, scale=alt.Scale(domain=domain, range=range_)),
         tooltip=[
             alt.Tooltip('dates', title='Date'),
             alt.Tooltip('values', title='Value')
@@ -108,9 +108,9 @@ def month_plot(dates, values, month, title='', border=False, cmap='YlGn', height
 
     days = list(calendar.day_abbr)
     chart = alt.Chart(df_month).mark_rect(cornerRadius=5, width=20, height=20).encode(
-        alt.X('days', sort=days, title=month_name).axis(tickSize=0, domain=False, labelFontSize=15, orient='top', labelAngle=0, labelExpr=expr),
-        alt.Y('weeks:N', title='').axis(tickSize=1, domain=False, labelAngle=0, labelFontSize=0),
-        alt.Color('values', legend=None).scale(domain=domain, range=range_),
+        alt.X('days', sort=days, title=month_name, axis=alt.Axis(tickSize=0, domain=False, labelFontSize=15, orient='top', labelAngle=0, labelExpr=expr)),
+        alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=1, domain=False, labelAngle=0, labelFontSize=0)),
+        alt.Color('values', legend=None, scale=alt.Scale(domain=domain, range=range_)),
         tooltip=[
             alt.Tooltip('dates', title='Date'),
             alt.Tooltip('values', title='Value')
