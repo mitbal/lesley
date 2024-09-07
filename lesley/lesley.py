@@ -51,6 +51,7 @@ def prep_data(dates, values):
 
     df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%a'))
     df['weeks'] = df['dates'].apply(lambda x: 'Week '+x.to_pydatetime().strftime('%W'))
+    df['months'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%B'))
 
     return df
 
