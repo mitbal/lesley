@@ -44,7 +44,9 @@ def prep_data(dates, values):
     full_df = pd.DataFrame({'dates': full_year, 'values': full_values})
     input_df = pd.DataFrame({'dates': dates, 'values': values})
 
-    df = full_df.merge(input_df, how='left', on='dates')[['dates', 'values_y']].rename(columns={'values_y': 'values'})
+    df = pd.merge(left=full_df, right=input_df, how='left', on='dates')\
+        .drop_duplicates()[['dates', 'values_y']]\
+        .rename(columns={'values_y': 'values'})
     df['values'] = df['values'].fillna(0)
 
     df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%a'))
