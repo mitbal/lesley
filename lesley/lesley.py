@@ -94,11 +94,12 @@ def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
     return chart
 
 # create function to make heatmap for one month only
-def month_plot(dates, values, month=3, title='', cmap='YlGn', height=150, width=200):
+def month_plot(dates, values, month=3, title='', cmap='YlGn', height=150, width=200, show_date=False):
     
     df = prep_data(dates, values)
     month_name = calendar.month_name[month]
     df_month = df[df['months'] == month_name].reset_index()
+    df_month['day'] = df['dates'].dt.day
 
     mapping = make_day_mapping()
     expr = gen_expr(mapping)
@@ -121,6 +122,14 @@ def month_plot(dates, values, month=3, title='', cmap='YlGn', height=150, width=
         title=title,
         view=alt.ViewConfig(strokeWidth=0)
     )
+
+    if show_date:
+        label = alt.Chart(df_month).mark_text(baseline='middle', fontSize=12).encode(
+            alt.X('days', sort=days),
+            alt.Y('weeks:N'),
+            alt.Text('day:N')
+        )
+        chart = chart + label
 
     return chart
 
