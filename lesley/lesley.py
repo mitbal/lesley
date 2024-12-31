@@ -124,10 +124,13 @@ def month_plot(dates, values, month=3, title='', cmap='YlGn', height=150, width=
     )
 
     if show_date:
+        df_month['is_weekend'] = df_month['days'].apply(lambda x: True if x in ['Sat', 'Sun'] else False)
+
         label = alt.Chart(df_month).mark_text(baseline='middle', fontSize=12).encode(
             alt.X('days', sort=days),
             alt.Y('weeks:N'),
-            alt.Text('day:N')
+            alt.Text('day:N'),
+            color=alt.condition(alt.datum['is_weekend'], alt.value('#ED2939'), alt.value('#000000'))
         )
         chart = chart + label
 
