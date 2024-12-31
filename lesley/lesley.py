@@ -94,7 +94,7 @@ def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
     return chart
 
 # create function to make heatmap for one month only
-def month_plot(dates, values, month=3, title='', cmap='YlGn', height=150, width=200, show_date=False):
+def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, height=150, width=200, show_date=False):
     
     df = prep_data(dates, values)
     month_name = calendar.month_name[month]
@@ -104,7 +104,8 @@ def month_plot(dates, values, month=3, title='', cmap='YlGn', height=150, width=
     mapping = make_day_mapping()
     expr = gen_expr(mapping)
 
-    domain = np.sort(np.unique(values))
+    if domain is None:
+        domain = np.sort(np.unique(values))
     range_ = sns.color_palette(cmap, len(domain)).as_hex()
 
     days = list(calendar.day_abbr)
