@@ -110,8 +110,8 @@ def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, heigh
 
     days = list(calendar.day_abbr)
     chart = alt.Chart(df_month).mark_rect(cornerRadius=5, width=20, height=20).encode(
-        alt.X('days', sort=days, title=month_name, axis=alt.Axis(tickSize=0, domain=False, labelFontSize=15, orient='top', labelAngle=0, labelExpr=expr)),
-        alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=1, domain=False, labelAngle=0, labelFontSize=0)),
+        alt.X('days', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=15, orient='top', labelAngle=0, labelExpr=expr)),
+        alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
         alt.Color('values', legend=None, scale=alt.Scale(domain=domain, range=range_)),
         tooltip=[
             alt.Tooltip('dates', title='Date'),
@@ -146,7 +146,7 @@ def calendar_plot(dates, values, cmap='YlGn', nrows=3, show_date=False, domain=N
 
     charts = [alt.Chart()]*12
     for i in range(12):
-        c = month_plot(dates, values, month=i+1, cmap=cmap, domain=domain, show_date=show_date)
+        c = month_plot(dates, values, month=i+1, title=calendar.month_name[i+1], cmap=cmap, domain=domain, show_date=show_date)
         charts[i] = c
 
     # format display
