@@ -94,7 +94,7 @@ def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
     return chart
 
 # create function to make heatmap for one month only
-def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, height=150, width=200, show_date=False):
+def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, width=250, height=None, show_date=False):
     
     df = prep_data(dates, values)
     month_name = calendar.month_name[month]
@@ -108,9 +108,13 @@ def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, heigh
         domain = np.sort(np.unique(values))
     range_ = sns.color_palette(cmap, len(domain)).as_hex()
 
+    cell_width = width * 0.1
+    if height is None:
+        height = width * 0.8
+
     days = list(calendar.day_abbr)
-    chart = alt.Chart(df_month).mark_rect(cornerRadius=5, width=20, height=20).encode(
-        alt.X('days', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=15, orient='top', labelAngle=0, labelExpr=expr)),
+    chart = alt.Chart(df_month).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
+        alt.X('days', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
         alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
         alt.Color('values', legend=None, scale=alt.Scale(domain=domain, range=range_)),
         tooltip=[
@@ -127,7 +131,7 @@ def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, heigh
     if show_date:
         df_month['is_weekend'] = df_month['days'].apply(lambda x: True if x in ['Sat', 'Sun'] else False)
 
-        label = alt.Chart(df_month).mark_text(baseline='middle', fontSize=12).encode(
+        label = alt.Chart(df_month).mark_text(baseline='middle', fontSize=width/20).encode(
             alt.X('days', sort=days),
             alt.Y('weeks:N'),
             alt.Text('day:N'),
