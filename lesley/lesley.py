@@ -33,7 +33,7 @@ def gen_expr(d):
     return expr
 
 # derived extra columns and fill missing rows
-def prep_data(dates, values):
+def prep_data(dates, values, labels=None):
 
     start_date = dates.sort_values()[0]
     get_year = start_date.year
@@ -48,6 +48,11 @@ def prep_data(dates, values):
     df = df.groupby('dates')['values_y'].mean().to_frame().reset_index()
     df = df.rename(columns={'values_y': 'values'})
     df['values'] = df['values'].fillna(0)
+    
+    if labels is not None:
+        input2 = pd.DataFrame({'dates': dates, 'labels': labels})
+        df = pd.merge(left=df, right=input2, how='left', on='dates')
+        df['labels'] = df['labels'].fillna('')
 
     df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%a'))
     df['weeks'] = df['dates'].apply(lambda x: 'Week '+x.to_pydatetime().strftime('%W'))
