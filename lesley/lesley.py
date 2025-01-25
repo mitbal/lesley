@@ -99,9 +99,9 @@ def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
     return chart
 
 # create function to make heatmap for one month only
-def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, width=250, height=None, show_date=False):
+def month_plot(dates, values, labels=None, month=3, title='', cmap='YlGn', domain=None, width=250, height=None, show_date=False):
     
-    df = prep_data(dates, values)
+    df = prep_data(dates, values, labels)
     month_name = calendar.month_name[month]
     df_month = df[df['months'] == month_name].reset_index()
     df_month['day'] = df['dates'].dt.day
@@ -117,15 +117,24 @@ def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, width
     if height is None:
         height = width * 0.8
 
-    days = list(calendar.day_abbr)
-    chart = alt.Chart(df_month).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
-        alt.X('days', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
-        alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
-        alt.Color('values', legend=None, scale=alt.Scale(domain=domain, range=range_)),
-        tooltip=[
+    if labels is not None:
+        tooltips = [
+            alt.Tooltip('labels', title=' ')
+        ]
+    else:
+        tooltips = [
             alt.Tooltip('dates', title='Date'),
             alt.Tooltip('values', title='Value')
         ]
+    
+    days = list(calendar.day_abbr)    
+    df_heatmap = df_month[df_month['values'] != 0].reset_index(drop=True)
+
+    chart = alt.Chart(df_heatmap).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
+        alt.X('days', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
+        alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
+        alt.Color('values', legend=None, scale=alt.Scale(domain=domain, range=range_)),
+        tooltip=tooltips
     ).properties(
         height=height,
         width=width,
@@ -140,6 +149,7 @@ def month_plot(dates, values, month=3, title='', cmap='YlGn', domain=None, width
             alt.X('days', sort=days),
             alt.Y('weeks:N'),
             alt.Text('day:N'),
+            tooltip=alt.value(None),
             color=alt.condition(alt.datum['is_weekend'], alt.value('#ED2939'), alt.value('#000000'))
         )
         chart = chart + label
