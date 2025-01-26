@@ -178,3 +178,21 @@ def calendar_plot(dates, values, labels=None, cmap='YlGn', nrows=3, show_date=Fa
         full &= chart
 
     return full
+
+
+def plot_calendar(year=2025, label_df=None):
+    dates = pd.date_range(f'{year}-01-01', f'{year}-12-31')
+    values = [-1]*len(dates)
+
+    default_df = pd.DataFrame({'date': dates, 'value': values})
+    if label_df is not None:
+        df = default_df.merge(label_df, on='date', how='left')
+        df['label'] = df['label'].fillna('')
+    else:
+        df = default_df
+
+    dates = df['date']
+    values = df['values']
+    labels = df['label']
+
+    return calendar_plot(dates, values, labels, cmap='Reds', nrows=3, show_date=True, domain=[2, 3, 5, 10, 20, 50, 100])
