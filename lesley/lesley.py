@@ -61,7 +61,7 @@ def prep_data(dates, values, labels=None):
     return df
 
 # create function to generate calendar heatmap
-def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
+def cal_heatmap(dates, values, cmap='YlGn', height=250, width=None):
 
     df = prep_data(dates, values)
     mapping = make_month_mapping()
@@ -70,9 +70,13 @@ def cal_heatmap(dates, values, cmap='YlGn', height=200, width=1200):
     domain = np.sort(np.unique(values))
     range_ = sns.color_palette(cmap, len(domain)).as_hex()
 
+    cell_width = height / 12.5
+    if width is None:
+        width = height * 5
+
     year = str(df['dates'].iloc[0].year)
     days = list(calendar.day_abbr)
-    chart = alt.Chart(df).mark_rect(cornerRadius=5, width=20, height=20).encode(
+    chart = alt.Chart(df).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
         y=alt.Y('days', sort=days, axis=alt.Axis(tickSize=0, title='', domain=False, values=['Mon', 'Thu', 'Sun'], labelFontSize=15)),
         x=alt.X('weeks:N', axis=alt.Axis(tickSize=0, domain=False, title='', labelExpr=expr, labelAngle=0, labelFontSize=15)),
         color=alt.Color('values', legend=None, scale=alt.Scale(domain=domain, range=range_)),
