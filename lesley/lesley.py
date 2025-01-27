@@ -185,6 +185,16 @@ def calendar_plot(dates, values, labels=None, cmap='YlGn', nrows=3, show_date=Fa
 
 
 def plot_calendar(year=2025, label_df=None):
+    """
+    Generate calendar heatmap with given year and labels (optional).
+
+    Parameters:
+    year (int): The year for which to generate the calendar heatmap. Defaults to 2025.
+    label_df (pd.DataFrame): A DataFrame containing dates and corresponding labels. If provided, it will be used as a basis for coloring in the heatmap. Defaults to None.
+
+    Returns:
+    alt.Chart: A calendar heatmap Chart object.
+    """
     dates = pd.date_range(f'{year}-01-01', f'{year}-12-31')
     values = [-1]*len(dates)
 
