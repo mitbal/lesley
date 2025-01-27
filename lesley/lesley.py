@@ -201,7 +201,7 @@ def plot_calendar(year=2025, label_df=None):
 
     if label_df is not None:
         label_df['date'] = pd.to_datetime(label_df['date']).copy()
-        if 'values' not in label_df.columns:
+        if 'value' not in label_df.columns:
             label_df['value'] = 1
         
         default_df = pd.DataFrame({'date': dates, 'value': values, 'label': labels})
