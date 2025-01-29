@@ -60,8 +60,21 @@ def prep_data(dates, values, labels=None):
 
     return df
 
-# create function to generate calendar heatmap
+
 def cal_heatmap(dates, values, cmap='YlGn', height=250, width=None):
+    """
+    Generate a github-style calendar-based heatmap using altair.
+
+    Parameters:
+        dates (pd.Series): Series of datetime objects representing the data points.
+        values (list or pd.Series): List or series of values to be plotted on the heatmap.
+        cmap (str, optional): Color map to use for the heatmap. Defaults to 'YlGn'.
+        height (int, optional): Height of the heatmap in pixels. Defaults to 250.
+        width (int, optional): Width of the heatmap in pixels. If not provided, will be automatically set based on the height.
+
+    Returns:
+        altair.Chart: The generated calendar-based heatmap chart.
+    """
 
     df = prep_data(dates, values)
     mapping = make_month_mapping()
