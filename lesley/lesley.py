@@ -108,7 +108,7 @@ def month_plot(dates, values, labels=None, month=3, title='', cmap='YlGn', domai
     df = prep_data(dates, values, labels)
     month_name = calendar.month_name[month]
     df_month = df[df['months'] == month_name].reset_index()
-    df_month['day'] = df['dates'].dt.day
+    df_month['day'] = df_month['dates'].dt.day
 
     mapping = make_day_mapping()
     expr = gen_expr(mapping)
@@ -148,7 +148,7 @@ def month_plot(dates, values, labels=None, month=3, title='', cmap='YlGn', domai
 
     if show_date:
         df_month['is_weekend'] = df_month['days'].apply(lambda x: True if x in ['Sat', 'Sun'] else False)
-
+        
         label = alt.Chart(df_month).mark_text(baseline='middle', fontSize=width/20).encode(
             alt.X('days', sort=days),
             alt.Y('weeks:N'),
