@@ -199,15 +199,28 @@ def calendar_plot(dates, values, labels=None, cmap='YlGn', nrows=3, show_date=Fa
 
 def plot_calendar(year=2025, label_df=None, color='Reds', layout='3x4'):
     """
-    Generate calendar heatmap with given year and labels (optional).
+    Creates an interactive calendar heatmap with a given year and optional labels.
 
-    Parameters:
-    year (int): The year for which to generate the calendar heatmap. Defaults to 2025.
-    label_df (pd.DataFrame): A DataFrame containing dates and corresponding labels. If provided, it will be used as a basis for coloring in the heatmap. Defaults to None.
+    Parameters
+    ----------
+    year : int (optional)
+        The calendar year to be plotted. Defaults to 2025.
+    label_df : DataFrame (optional)
+        A DataFrame containing additional information to plot alongside the dates.
+        It should have columns 'date' and optionally either 'value' and/or 'label'.
+        If 'value' is not provided, it only show the label in the tooltip.
+        If 'label' is not provided, it will use the 'value' column as the label.
+    color : str (optional)
+        Color palette used for the heatmap. Defaults to 'Reds'.
+    layout : str (optional)
+        Layout of the calendar heatmap in terms of rows and columns, e.g., '3x4' or '1x12'.
 
-    Returns:
-    alt.Chart: A calendar heatmap Chart object.
+    Returns
+    -------
+    altair.Chart object
+        The interactive calendar heatmap chart.
     """
+    
     dates = pd.date_range(f'{year}-01-01', f'{year}-12-31')
     values = [0]*len(dates)
     labels = ['']*len(dates)
