@@ -184,7 +184,7 @@ def calendar_plot(dates, values, labels=None, cmap='YlGn', nrows=3, show_date=Fa
     return full
 
 
-def plot_calendar(year=2025, label_df=None):
+def plot_calendar(year=2025, label_df=None, color='Reds', layout='3x4'):
     """
     Generate calendar heatmap with given year and labels (optional).
 
@@ -199,15 +199,21 @@ def plot_calendar(year=2025, label_df=None):
     values = [0]*len(dates)
     labels = ['']*len(dates)
 
+    domain = []
     if label_df is not None:
         label_df['date'] = pd.to_datetime(label_df['date']).copy()
         if 'value' not in label_df.columns:
             label_df['value'] = 1
+            domain = [0, 1]
+        else:
+            domain = np.sort(np.unique(label_df['value']))
         
         default_df = pd.DataFrame({'date': dates, 'value': values, 'label': labels})
         df = default_df.merge(label_df, on='date', how='left', suffixes=('', '_y'))
 
+        dates = df['date']
         values = df['value_y'].tolist()
         labels = df['label_y'].tolist()
 
-    return calendar_plot(dates, values, labels, cmap='Reds', nrows=3, show_date=True, domain=[0,1])
+    nrows = int(layout[0])
+    return calendar_plot(dates, values, labels, cmap=color, nrows=nrows, show_date=True, domain=domain)
