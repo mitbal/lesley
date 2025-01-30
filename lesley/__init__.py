@@ -1,1 +1,1 @@
-from lesley.lesley import cal_heatmap, month_plot, calendar_plot, prep_data
+from lesley.lesley import cal_heatmap, month_plot, calendar_plot, prep_data, plot_calendar
