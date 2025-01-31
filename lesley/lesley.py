@@ -238,26 +238,40 @@ def plot_calendar(year=2025, label_df=None, color='Reds', layout='3x4'):
     altair.Chart object
         The interactive calendar heatmap chart.
     """
-    
+
+    # error handling for input data
+    if label_df is not None:
+        if 'date' not in label_df.columns:
+            raise ValueError(f'plot_calendar: column "date" is required')
+        else:
+            if 'value' not in label_df.columns and 'label' not in label_df.columns:
+                raise ValueError(f'plot_calendar: column "value" or "label" is required')
+
+    # default value for empty calendar
     dates = pd.date_range(f'{year}-01-01', f'{year}-12-31')
     values = [0]*len(dates)
-    labels = ['']*len(dates)
+    labels = None
 
     domain = []
     if label_df is not None:
         label_df['date'] = pd.to_datetime(label_df['date']).copy()
+
         if 'value' not in label_df.columns:
             label_df['value'] = 1
             domain = [0, 1]
         else:
             domain = np.sort(np.unique(label_df['value']))
-        
-        default_df = pd.DataFrame({'date': dates, 'value': values, 'label': labels})
+
+        default_df = pd.DataFrame({'date': dates, 'value': values})
+        if 'label' in label_df.columns:
+            default_df['label'] = ['']*len(dates)
+
         df = default_df.merge(label_df, on='date', how='left', suffixes=('', '_y'))
 
         dates = df['date']
         values = df['value_y'].tolist()
-        labels = df['label_y'].tolist()
+        if 'label' in label_df.columns:
+            labels = df['label_y'].tolist()
 
     nrows = int(layout[0])
     return calendar_plot(dates, values, labels, cmap=color, nrows=nrows, show_date=True, domain=domain)
