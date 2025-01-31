@@ -115,8 +115,26 @@ def cal_heatmap(dates, values, cmap='YlGn', height=250, width=None):
 
     return chart
 
-# create function to make heatmap for one month only
+
 def month_plot(dates, values, labels=None, month=3, title='', cmap='YlGn', domain=None, width=250, height=None, show_date=False):
+    """
+    Generate a calendar-based heatmap plot for a single month.
+    
+    Parameters:
+        dates (pd.Series): Series of datetime objects representing the data points.
+        values (list or pd.Series): List or series of values to be plotted on the heatmap.
+        labels (optional list): List of labels to display on top of the heatmap. If not provided, no labels will be displayed.
+        month (int, optional): Month number for which the heatmap is generated. Defaults to 3 (March).
+        title (str, optional): Title of the heatmap plot. If not provided, no title will be displayed.
+        cmap (str, optional): Color map to use for the heatmap. Defaults to 'YlGn'.
+        domain (list, optional): Domain values for the color scale. If not provided, will be automatically generated based on the input data.
+        width (int, optional): Width of the heatmap plot in pixels. Defaults to 250.
+        height (int, optional): Height of the heatmap plot in pixels. If not provided, will be automatically set based on the width.
+        show_date (bool, optional): Whether to display day labels on top of the heatmap. Defaults to False.
+
+    Returns:
+        altair.Chart: The generated calendar-based heatmap chart.
+    """
     
     df = prep_data(dates, values, labels)
     month_name = calendar.month_name[month]
@@ -144,7 +162,7 @@ def month_plot(dates, values, labels=None, month=3, title='', cmap='YlGn', domai
             alt.Tooltip('values', title='Value')
         ]
     
-    days = list(calendar.day_abbr)    
+    days = list(calendar.day_abbr)
     df_heatmap = df_month[df_month['values'] != 0].reset_index(drop=True)
 
     chart = alt.Chart(df_heatmap).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
