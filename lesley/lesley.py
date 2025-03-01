@@ -35,7 +35,7 @@ def gen_expr(d):
 # derived extra columns and fill missing rows
 def prep_data(dates, values, labels=None):
 
-    start_date = dates.sort_values()[0]
+    start_date = dates.min()
     get_year = start_date.year
 
     full_year = pd.date_range(start=str(get_year)+'-01-01', end=str(get_year)+'-12-31')
