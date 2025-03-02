@@ -1,4 +1,10 @@
-# Lesley is a package to plot calendar based heatmap. Inspired by July
+"""
+Lesley: A Python package for plotting calendar-based heatmaps.
+Inspired by the July visualization library.
+"""
+
+__all__ = ['cal_heatmap', 'month_plot', 'calendar_plot', 'plot_calendar']
+
 import calendar
 
 import numpy as np
