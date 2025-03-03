@@ -26,13 +26,15 @@ def make_month_mapping() -> Dict[str, str]:
     return month_mapping
 
 
-# shorten day name to a single letter
-def make_day_mapping():
-    
-    d = {}
+def make_day_mapping() -> Dict[str, str]:
+    """
+    Creates a mapping from day abbreviations to single-letter representations.
+    """
+    day_mapping = {}
     for day in calendar.day_abbr:
-        d[day] = day[0]
-    return d
+        day_mapping[day] = day[0]
+    return day_mapping
+
 
 # create function to generate altair label expression for mapping
 def gen_expr(d):
