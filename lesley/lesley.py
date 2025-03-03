@@ -6,7 +6,7 @@ Inspired by the July visualization library.
 __all__ = ['cal_heatmap', 'month_plot', 'calendar_plot', 'plot_calendar']
 
 import calendar
-from typing import Dict, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -53,20 +53,36 @@ def gen_expr(mapping: Dict[str, str]) -> str:
     return expression
 
 
-# derived extra columns and fill missing rows
-def prep_data(dates, values, labels=None):
+def prep_data(dates: Iterable,
+              values: Iterable,
+              labels: Optional[Iterable] = None) -> pd.DataFrame:
+    """
+    Prepares data for analysis by ensuring dates are continuous, handling missing values,
+    and adding derived columns for day, week, and month.  The dates and values input
+    are explicitly converted to pandas Series to ensure they are iterable.
+
+    Args:
+        dates (Iterable): A sequence of dates. Converted to pd.Series.
+        values (Iterable): A sequence of values corresponding to the dates. Converted to pd.Series.
+        labels (Optional[Iterable]): A sequence of labels corresponding to the dates. Defaults to None.
+
+    Returns:
+        pd.DataFrame: A DataFrame with continuous dates, filled missing values, and derived columns.
+    """
+
+    dates = pd.to_datetime(dates)
+    values = pd.Series(values)
 
     start_date = dates.min()
-    get_year = start_date.year
+    start_year = start_date.year
 
-    full_year = pd.date_range(start=str(get_year)+'-01-01', end=str(get_year)+'-12-31')
-    full_values = [0]*len(full_year)
-
-    full_df = pd.DataFrame({'dates': full_year, 'values': full_values})
+    full_year = pd.date_range(start=f'{start_year}-01-01', end=f'{start_year}-01-01')
+    full_df = pd.DataFrame({'dates': full_year, 'values': [0]*len(full_year)})
+    
     input_df = pd.DataFrame({'dates': dates, 'values': values})
+    input_df = input_df.groupby('dates')['values'].max().reset_index()
 
     df = pd.merge(left=full_df, right=input_df, how='left', on='dates')
-    df = df.groupby('dates')['values_y'].mean().to_frame().reset_index()
     df = df.rename(columns={'values_y': 'values'})
     df['values'] = df['values'].fillna(0)
     
@@ -75,9 +91,9 @@ def prep_data(dates, values, labels=None):
         df = pd.merge(left=df, right=input2, how='left', on='dates')
         df['labels'] = df['labels'].fillna('')
 
-    df['days'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%a'))
-    df['weeks'] = df['dates'].apply(lambda x: 'Week '+x.to_pydatetime().strftime('%W'))
-    df['months'] = df['dates'].apply(lambda x: x.to_pydatetime().strftime('%B'))
+    df['days'] = df['dates'].dt.strftime('%a')
+    df['weeks'] = 'Week ' + df['dates'].dt.strftime('%W')
+    df['months'] = df['dates'].dt.strftime('%B')
 
     return df
 
