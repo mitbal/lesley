@@ -77,20 +77,17 @@ def prep_data(dates: Iterable,
     start_year = start_date.year
 
     full_year = pd.date_range(start=f'{start_year}-01-01', end=f'{start_year}-01-01')
-    full_df = pd.DataFrame({'dates': full_year, 'values': [0]*len(full_year)})
+    full_df = pd.DataFrame({'dates': full_year})
     
     input_df = pd.DataFrame({'dates': dates, 'values': values})
-    input_df = input_df.groupby('dates')['values'].max().reset_index()
+    if labels is not None:
+        input_df['labels'] = labels
+    input_df = input_df.sort_values(['dates', 'values'], ascending=[True, False]).drop_duplicates(subset=['dates'], keep='first')
 
     df = pd.merge(left=full_df, right=input_df, how='left', on='dates')
-    df = df.rename(columns={'values_y': 'values'})
     df['values'] = df['values'].fillna(0)
+    df['labels'] = df['labels'].fillna('')
     
-    if labels is not None:
-        input2 = pd.DataFrame({'dates': dates, 'labels': labels})
-        df = pd.merge(left=df, right=input2, how='left', on='dates')
-        df['labels'] = df['labels'].fillna('')
-
     df['days'] = df['dates'].dt.strftime('%a')
     df['weeks'] = 'Week ' + df['dates'].dt.strftime('%W')
     df['months'] = df['dates'].dt.strftime('%B')
