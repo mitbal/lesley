@@ -6,20 +6,25 @@ Inspired by the July visualization library.
 __all__ = ['cal_heatmap', 'month_plot', 'calendar_plot', 'plot_calendar']
 
 import calendar
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 import altair as alt
 import seaborn as sns
 
-# create mapping from category used in the plot, to the label displayed
-def make_month_mapping():
-    d = {}
 
+def make_month_mapping() -> Dict[str, str]:
+    """
+    Creates a mapping from week labels to month abbreviations for use in the plot.
+    """
+    month_mapping = {}
     for i in range(12):
-        d[f'Week {int(i*4.5+1):02d}'] = f'{calendar.month_abbr[i+1]}'
+        week_number = int(i * 4.5 + 1)
+        month_abbr = calendar.month_abbr[i + 1]
+        month_mapping[f'Week {week_number:02d}'] = month_abbr
+    return month_mapping
 
-    return d
 
 # shorten day name to a single letter
 def make_day_mapping():
