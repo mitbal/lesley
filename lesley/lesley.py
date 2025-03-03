@@ -36,14 +36,22 @@ def make_day_mapping() -> Dict[str, str]:
     return day_mapping
 
 
-# create function to generate altair label expression for mapping
-def gen_expr(d):
-    expr = ""
-    for k, v in d.items():
-        expr += f"datum.label == '{k}' ? '{v}': "
-    expr += " ''"
+def gen_expr(mapping: Dict[str, str]) -> str:
+    """
+    Generates an Altair expression for mapping labels based on a dictionary.
 
-    return expr
+    Args:
+        mapping (Dict[str, str]): A dictionary where keys are the original labels and values are the desired labels.
+
+    Returns:
+        str: An Altair expression string.
+    """
+    expression = ""
+    for key, value in mapping.items():
+        expression += f"datum.label == '{key}' ? '{value}': "
+    expression += " ''"
+    return expression
+
 
 # derived extra columns and fill missing rows
 def prep_data(dates, values, labels=None):
