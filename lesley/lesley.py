@@ -121,7 +121,9 @@ def cal_heatmap(dates: Iterable,
     domain = np.sort(np.unique(values))
     range_ = sns.color_palette(cmap, len(domain)).as_hex()
 
+    font_size = int(height / 16)
     cell_width = height / 12.5
+    corner_radius = height / 50
     if width is None:
         width = height * 5
 
@@ -129,35 +131,35 @@ def cal_heatmap(dates: Iterable,
     days = list(calendar.day_abbr)
 
     chart = alt.Chart(df).mark_rect(
-        cornerRadius=5,
+        cornerRadius=corner_radius,
         width=cell_width,
         height=cell_width
     ).encode(
         y=alt.Y(
             'days',
-            sort=days, 
+            sort=days,
             axis=alt.Axis(
-                tickSize=0, 
-                title='', 
-                domain=False, 
-                values=['Mon', 'Thu', 'Sun'], 
-                labelFontSize=15
+                tickSize=0,
+                title='',
+                domain=False,
+                values=['Mon', 'Thu', 'Sun'],
+                labelFontSize=font_size
             )
         ),
         x=alt.X(
             'weeks:N', 
             axis=alt.Axis(
-                tickSize=0, 
-                domain=False, 
-                title='', 
-                labelExpr=expr, 
-                labelAngle=0, 
-                labelFontSize=15
+                tickSize=0,
+                domain=False,
+                title='',
+                labelExpr=expr,
+                labelAngle=0,
+                labelFontSize=font_size
             )
         ),
         color=alt.Color(
-            'values', 
-            legend=None, 
+            'values',
+            legend=None,
             scale=alt.Scale(domain=domain, range=range_)
         ),
         tooltip=[
