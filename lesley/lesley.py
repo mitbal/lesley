@@ -99,6 +99,7 @@ def cal_heatmap(dates: Iterable,
                 values: Iterable,
                 cmap: str = 'YlGn',
                 height: int = 250,
+                days_of_week: list = ['Mon', 'Thu', 'Sun'],
                 width: Optional[int] = None) -> alt.Chart:
     """
     Generate a github-style calendar-based heatmap using altair.
@@ -108,6 +109,7 @@ def cal_heatmap(dates: Iterable,
         values (list or pd.Series): List or series of values to be plotted on the heatmap.
         cmap (str, optional): Color map to use for the heatmap. Defaults to 'YlGn'.
         height (int, optional): Height of the heatmap in pixels. Defaults to 250.
+        days_of_week (list, optional): The labels for 3 letters of days of week in the y axis. Default to Monday, Thursday, and Sunday.
         width (int, optional): Width of the heatmap in pixels. If not provided, will be automatically set based on the height.
 
     Returns:
@@ -142,7 +144,7 @@ def cal_heatmap(dates: Iterable,
                 tickSize=0,
                 title='',
                 domain=False,
-                values=['Mon', 'Thu', 'Sun'],
+                values=days_of_week,
                 labelFontSize=font_size
             )
         ),
