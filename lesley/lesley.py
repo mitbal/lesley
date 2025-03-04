@@ -95,7 +95,11 @@ def prep_data(dates: Iterable,
     return df
 
 
-def cal_heatmap(dates, values, cmap='YlGn', height=250, width=None):
+def cal_heatmap(dates: Iterable,
+                values: Iterable,
+                cmap: str = 'YlGn',
+                height: int = 250,
+                width: Optional[int] = None) -> alt.Chart:
     """
     Generate a github-style calendar-based heatmap using altair.
 
