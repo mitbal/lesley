@@ -127,10 +127,39 @@ def cal_heatmap(dates: Iterable,
 
     year = str(df['dates'].iloc[0].year)
     days = list(calendar.day_abbr)
-    chart = alt.Chart(df).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
-        y=alt.Y('days', sort=days, axis=alt.Axis(tickSize=0, title='', domain=False, values=['Mon', 'Thu', 'Sun'], labelFontSize=15)),
-        x=alt.X('weeks:N', axis=alt.Axis(tickSize=0, domain=False, title='', labelExpr=expr, labelAngle=0, labelFontSize=15)),
-        color=alt.Color('values', legend=None, scale=alt.Scale(domain=domain, range=range_)),
+
+    chart = alt.Chart(df).mark_rect(
+        cornerRadius=5,
+        width=cell_width,
+        height=cell_width
+    ).encode(
+        y=alt.Y(
+            'days',
+            sort=days, 
+            axis=alt.Axis(
+                tickSize=0, 
+                title='', 
+                domain=False, 
+                values=['Mon', 'Thu', 'Sun'], 
+                labelFontSize=15
+            )
+        ),
+        x=alt.X(
+            'weeks:N', 
+            axis=alt.Axis(
+                tickSize=0, 
+                domain=False, 
+                title='', 
+                labelExpr=expr, 
+                labelAngle=0, 
+                labelFontSize=15
+            )
+        ),
+        color=alt.Color(
+            'values', 
+            legend=None, 
+            scale=alt.Scale(domain=domain, range=range_)
+        ),
         tooltip=[
             alt.Tooltip('dates', title='Date'),
             alt.Tooltip('values', title='Value')
