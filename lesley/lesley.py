@@ -187,7 +187,16 @@ def cal_heatmap(dates: Iterable,
     return chart
 
 
-def month_plot(dates, values, labels=None, month=3, title='', cmap='YlGn', domain=None, width=250, height=None, show_date=False):
+def month_plot(dates: Iterable,
+               values: Iterable,
+               labels: Optional[Iterable] = None,
+               month: int = 3,
+               title: str = '',
+               cmap: str = 'YlGn',
+               domain: Optional[List[Union[int, float]]] = None,
+               width: int = 250,
+               height: Optional[int] = None,
+               show_date: bool = False) -> alt.Chart:
     """
     Generate a calendar-based heatmap plot for a single month.
     
