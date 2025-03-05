@@ -327,7 +327,10 @@ def calendar_plot(dates: Iterable,
     return full
 
 
-def plot_calendar(year=2025, label_df=None, color='Reds', layout='3x4'):
+def plot_calendar(year: int = 2025,
+                  label_df: Optional[pd.DataFrame] = None,
+                  color: str = 'Reds',
+                  layout: str = '3x4') -> alt.VConcatChart:
     """
     Creates an interactive calendar heatmap with a given year and optional labels.
 
