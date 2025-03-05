@@ -271,9 +271,41 @@ def month_plot(dates: Iterable,
 
     return chart
 
-# create function to make calendar heatmap for all months
-def calendar_plot(dates, values, labels=None, cmap='YlGn', nrows=3, show_date=False, domain=None):
-    
+
+def calendar_plot(dates: Iterable,
+                  values: Iterable,
+                  labels: Optional[Iterable] = None,
+                  cmap: str = 'YlGn',
+                  nrows: int = 3,
+                  show_date: bool = False,
+                  domain: Optional[List[Union[int, float]]] = None) -> alt.VConcatChart:
+    """
+    Generate a calendar-based heatmap plot for all months of a year.
+
+    This function creates a grid of monthly calendar heatmaps arranged in a specified
+    number of rows. Each month is displayed as a separate heatmap, showing the distribution
+    of values across the days of that month.
+
+    Parameters:
+        dates (Iterable): A sequence of dates to plot on the calendar.
+        values (Iterable): A sequence of values corresponding to the dates.
+        labels (Optional[Iterable], optional): A sequence of labels corresponding to the dates.
+            If provided, these labels will be displayed in tooltips. Defaults to None.
+        cmap (str, optional): Color map to use for the heatmap. Defaults to 'YlGn'.
+        nrows (int, optional): Number of rows in the grid layout. Must be a factor of 12
+            (i.e., 1, 2, 3, 4, 6, or 12). Defaults to 3.
+        show_date (bool, optional): Whether to display day numbers on the heatmap cells.
+            Defaults to False.
+        domain (Optional[List[Union[int, float]]], optional): Domain values for the color scale.
+            If not provided, will be automatically determined from the values. Defaults to None.
+
+    Returns:
+        alt.VConcatChart: A vertically concatenated chart containing the monthly heatmaps
+            arranged in the specified number of rows.
+
+    Raises:
+        ValueError: If nrows is not a factor of 12 (i.e., not in [1, 2, 3, 4, 6, 12]).
+    """
     valid_nrows = [1, 2, 3, 4, 6, 12]
     if nrows not in valid_nrows:
         raise ValueError(f'calendar_plot: nrows must be a factor of 12, i.e {valid_nrows}')
