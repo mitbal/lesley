@@ -76,7 +76,7 @@ def prep_data(dates: Iterable,
     start_date = dates.min()
     start_year = start_date.year
 
-    full_year = pd.date_range(start=f'{start_year}-01-01', end=f'{start_year}-01-01')
+    full_year = pd.date_range(start=f'{start_year}-01-01', end=f'{start_year}-12-31')
     full_df = pd.DataFrame({'dates': full_year})
     
     input_df = pd.DataFrame({'dates': dates, 'values': values})
@@ -86,7 +86,6 @@ def prep_data(dates: Iterable,
 
     df = pd.merge(left=full_df, right=input_df, how='left', on='dates')
     df['values'] = df['values'].fillna(0)
-    df['labels'] = df['labels'].fillna('')
     
     df['days'] = df['dates'].dt.strftime('%a')
     df['weeks'] = 'Week ' + df['dates'].dt.strftime('%W')
