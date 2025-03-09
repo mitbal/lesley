@@ -1,5 +1,9 @@
 # Lesley
 
+[![PyPI Downloads](https://static.pepy.tech/badge/lesley)](https://pepy.tech/projects/lesley)
+
+![example workflow](https://github.com/mitbal/lesley/actions/workflows/publish.yml/badge.svg)
+
 Lesley is a lightweight Python package designed to create interactive, github-style, calendar-based heatmaps using altair.
 
 ## Example Usage
