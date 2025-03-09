@@ -1,3 +1,5 @@
+.PHONY: all test clean
+
 build:
 	python -m build
 
@@ -7,4 +9,7 @@ publish:
 clean:
 	rm -rf build dist
 
-all: build publish clean
+test:
+	pytest --cov-branch --cov-report=xml --cov=. test/test.py
+
+all: test build publish clean
