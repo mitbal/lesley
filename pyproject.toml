@@ -40,3 +40,6 @@ keywords = [
 
 [project.urls]
 Repository = 'https://github.com/mitbal/lesley.git'
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
