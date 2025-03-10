@@ -1,0 +1,5 @@
+altair==5.4.1
+pandas==2.2.2
+numpy==1.26.4
+seaborn==0.13.2
+matplotlib==3.9.1
