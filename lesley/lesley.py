@@ -73,7 +73,7 @@ def prep_data(dates: Iterable,
     dates = pd.to_datetime(dates)
     values = pd.Series(values)
 
-    start_date = dates.min()
+    start_date = min(dates)
     start_year = start_date.year
 
     full_year = pd.date_range(start=f'{start_year}-01-01', end=f'{start_year}-12-31')
