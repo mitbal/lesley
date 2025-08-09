@@ -244,17 +244,20 @@ def month_plot(dates: Iterable,
     days = list(calendar.day_abbr)
     df_heatmap = df_month[df_month['values'] != 0].reset_index(drop=True)
 
-    chart = alt.Chart(df_heatmap).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
-        alt.X('days:N', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
-        alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
-        alt.Color('values:Q', legend=None, scale=alt.Scale(domain=domain, range=range_)),
-        tooltip=tooltips
-    ).properties(
-        height=height,
-        width=width,
-        title=title,
-        view=alt.ViewConfig(strokeWidth=0)
-    )
+    if len(df_heatmap) > 0:
+        chart = alt.Chart(df_heatmap).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
+            alt.X('days:N', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
+            alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
+            alt.Color('values:Q', legend=None, scale=alt.Scale(domain=domain, range=range_)),
+            tooltip=tooltips
+        ).properties(
+            height=height,
+            width=width,
+            title=title,
+            view=alt.ViewConfig(strokeWidth=0)
+        )
+    else:
+        chart = alt.Chart()
 
     if show_date:
         df_month['is_weekend'] = df_month['days'].apply(lambda x: True if x in ['Sat', 'Sun'] else False)
