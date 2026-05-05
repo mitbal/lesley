@@ -229,7 +229,7 @@ def month_plot(dates: Iterable,
 
     cell_width = width * 0.1
     if height is None:
-        height = width * 0.8
+        height = int(width * 0.8)
 
     if labels is not None:
         tooltips = [
@@ -243,7 +243,6 @@ def month_plot(dates: Iterable,
     
     days = list(calendar.day_abbr)
     df_heatmap = df_month[df_month['values'] != 0].reset_index(drop=True)
-
     if len(df_heatmap) > 0:
         chart = alt.Chart(df_heatmap).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
             alt.X('days:N', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
@@ -257,7 +256,16 @@ def month_plot(dates: Iterable,
             view=alt.ViewConfig(strokeWidth=0)
         )
     else:
-        chart = alt.Chart()
+        chart = alt.Chart(df_month).mark_rect(cornerRadius=5, width=cell_width, height=cell_width, opacity=0).encode(
+            alt.X('days:N', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
+            alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
+            tooltip=tooltips
+        ).properties(
+            height=height,
+            width=width,
+            title=title,
+            view=alt.ViewConfig(strokeWidth=0)
+        )
 
     if show_date:
         df_month['is_weekend'] = df_month['days'].apply(lambda x: True if x in ['Sat', 'Sun'] else False)
@@ -269,7 +277,10 @@ def month_plot(dates: Iterable,
             tooltip=alt.value(None),
             color=alt.condition(alt.datum['is_weekend'], alt.value('#ED2939'), alt.value('#000000'))
         )
-        chart = chart + label
+        if chart is not None:
+            chart = chart + label
+        else:
+            chart = label
 
     return chart
 
@@ -312,19 +323,25 @@ def calendar_plot(dates: Iterable,
     if nrows not in valid_nrows:
         raise ValueError(f'calendar_plot: nrows must be a factor of 12, i.e {valid_nrows}')
 
-    charts = [alt.Chart()]*12
+    charts = [None]*12
     for i in range(12):
         c = month_plot(dates, values, labels, month=i+1, title=calendar.month_name[i+1], cmap=cmap, domain=domain, show_date=show_date)
         charts[i] = c
 
-    # format display
-    full = alt.vconcat()
-    for i in range(nrows):
-        chart = alt.hconcat()
-        ncols = int(12/nrows)
-        for j in range(ncols):
-            chart |= charts[i*ncols+j]
-        full &= chart
+    # format display - create columns first, then append them
+    ncols = int(12/nrows)
+    columns = []
+    
+    for j in range(ncols):
+        column = alt.vconcat()
+        for i in range(nrows):
+            column &= charts[i + j*nrows]
+        columns.append(column)
+    
+    # Combine all columns horizontally
+    full = alt.hconcat()
+    for column in columns:
+        full |= column
 
     return full
 
