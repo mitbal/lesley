@@ -1,1 +1,24 @@
 .DS_Store
+
+# Python caches and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Environments and editor files
+.venv/
+venv/
+.idea/
+.vscode/
+
+# Generated local outputs
+*.html
