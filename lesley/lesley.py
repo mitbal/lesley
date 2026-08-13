@@ -11,7 +11,13 @@ from typing import Dict, Iterable, List, Optional, Union
 import numpy as np
 import pandas as pd
 import altair as alt
-import seaborn as sns
+from matplotlib import colormaps
+from matplotlib.colors import to_hex
+
+
+def _color_palette(cmap: str, size: int) -> List[str]:
+    """Sample colors from a Matplotlib colormap without using its endpoints."""
+    return [to_hex(colormaps[cmap](value)) for value in np.linspace(0, 1, size + 2)[1:-1]]
 
 
 def make_month_mapping() -> Dict[str, str]:
@@ -120,7 +126,7 @@ def cal_heatmap(dates: Iterable,
     expr = gen_expr(mapping)
 
     domain = np.sort(np.unique(values))
-    range_ = sns.color_palette(cmap, len(domain)).as_hex()
+    range_ = _color_palette(cmap, len(domain))
 
     font_size = int(height / 16)
     cell_width = height / 12.5
@@ -225,7 +231,7 @@ def month_plot(dates: Iterable,
 
     if domain is None:
         domain = np.sort(np.unique(values))
-    range_ = sns.color_palette(cmap, len(domain)).as_hex()
+    range_ = _color_palette(cmap, len(domain))
 
     cell_width = width * 0.1
     if height is None:
@@ -291,7 +297,7 @@ def calendar_plot(dates: Iterable,
                   cmap: str = 'YlGn',
                   nrows: int = 3,
                   show_date: bool = False,
-                  domain: Optional[List[Union[int, float]]] = None) -> alt.VConcatChart:
+                  domain: Optional[List[Union[int, float]]] = None) -> alt.HConcatChart:
     """
     Generate a calendar-based heatmap plot for all months of a year.
 
@@ -313,7 +319,7 @@ def calendar_plot(dates: Iterable,
             If not provided, will be automatically determined from the values. Defaults to None.
 
     Returns:
-        alt.VConcatChart: A vertically concatenated chart containing the monthly heatmaps
+        alt.HConcatChart: A horizontally concatenated chart containing the monthly heatmaps
             arranged in the specified number of rows.
 
     Raises:
@@ -349,7 +355,7 @@ def calendar_plot(dates: Iterable,
 def plot_calendar(year: int = 2025,
                   label_df: Optional[pd.DataFrame] = None,
                   color: str = 'Reds',
-                  layout: str = '3x4') -> alt.VConcatChart:
+                  layout: str = '3x4') -> alt.HConcatChart:
     """
     Creates an interactive calendar heatmap with a given year and optional labels.
 
