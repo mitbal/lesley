@@ -72,11 +72,11 @@ class TestLesley(unittest.TestCase):
         dates = pd.to_datetime(['2024-01-01', '2024-03-03', '2024-05-05'])
         values = [10, 20, 30]
         chart = lesley.calendar_plot(dates, values, nrows=3)
-        self.assertIsInstance(chart, alt.VConcatChart)
+        self.assertIsInstance(chart, alt.HConcatChart)
 
         #test show_date = True
         chart = lesley.calendar_plot(dates, values, nrows=3, show_date = True)
-        self.assertIsInstance(chart, alt.VConcatChart)
+        self.assertIsInstance(chart, alt.HConcatChart)
 
         # Test invalid nrows
         with self.assertRaises(ValueError):
@@ -84,19 +84,19 @@ class TestLesley(unittest.TestCase):
 
     def test_plot_calendar(self):
         chart = lesley.plot_calendar(year=2024)
-        self.assertIsInstance(chart, alt.VConcatChart)
+        self.assertIsInstance(chart, alt.HConcatChart)
 
         # Test with label_df
         data = {'date': ['2024-01-01', '2024-01-05'], 'value': [10, 20]}
         label_df = pd.DataFrame(data)
         chart = lesley.plot_calendar(year=2024, label_df=label_df)
-        self.assertIsInstance(chart, alt.VConcatChart)
+        self.assertIsInstance(chart, alt.HConcatChart)
 
         #Test only with Label Column
         data = {'date': ['2024-01-01', '2024-01-05'], 'label': ['A', 'B']}
         label_df = pd.DataFrame(data)
         chart = lesley.plot_calendar(year=2024, label_df=label_df)
-        self.assertIsInstance(chart, alt.VConcatChart)
+        self.assertIsInstance(chart, alt.HConcatChart)
 
         # Test invalid label_df
         label_df_missing_date = pd.DataFrame({'value': [10, 20]})
@@ -111,7 +111,7 @@ class TestLesley(unittest.TestCase):
         data = {'date': ['2024-01-01', '2024-01-05'], 'value': [10, 20]}
         label_df = pd.DataFrame(data)
         chart = lesley.plot_calendar(year=2024, label_df=label_df, layout='3x4')
-        self.assertIsInstance(chart, alt.VConcatChart)
+        self.assertIsInstance(chart, alt.HConcatChart)
 
         #Test incorrect nrows option, expect ValueError because "layout = 3x4" has to have rows that can divide 12 (number of months)
         with self.assertRaises(ValueError):

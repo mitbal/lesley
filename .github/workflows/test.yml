@@ -5,8 +5,12 @@ on:
 
 jobs:
   test:
-    name: Run tests and collect coverage
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -14,7 +18,10 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
 
       - name: Install dependencies
         run: |
@@ -24,6 +31,7 @@ jobs:
         run: pytest --cov-branch --cov-report=xml --cov=. test/test.py
 
       - name: Upload results to Codecov
+        if: matrix.python-version == '3.14'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
