@@ -3,21 +3,101 @@ Lesley: A Python package for plotting calendar-based heatmaps.
 Inspired by the July visualization library.
 """
 
-__all__ = ['cal_heatmap', 'month_plot', 'calendar_plot', 'plot_calendar']
+__all__ = [
+    'PALETTES',
+    'calendar_plot',
+    'cal_heatmap',
+    'color_palette',
+    'month_plot',
+    'plot_calendar',
+    'prep_data',
+]
 
 import calendar
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
 import altair as alt
 from matplotlib import colormaps
-from matplotlib.colors import to_hex
+from matplotlib.colors import LinearSegmentedColormap, to_hex
 
 
-def _color_palette(cmap: str, size: int) -> List[str]:
-    """Sample colors from a Matplotlib colormap without using its endpoints."""
-    return [to_hex(colormaps[cmap](value)) for value in np.linspace(0, 1, size + 2)[1:-1]]
+Palette = Union[str, Sequence[str]]
+
+PALETTES: Dict[str, Tuple[str, ...]] = {
+    'github': ('#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'),
+    'forest': ('#eef3e8', '#c5d9a4', '#88b96b', '#4c8c4a', '#24563b'),
+    'ocean': ('#edf6f4', '#b9ddd7', '#6dbdb8', '#277f8e', '#153f5b'),
+    'ember': ('#fff1df', '#f6c177', '#e07a3f', '#b64332', '#672a38'),
+    'berry': ('#f8eef3', '#e5b2ca', '#c76b9b', '#873f78', '#45204f'),
+    'dusk': ('#f1f0e8', '#c6c4a5', '#8f8d74', '#55566d', '#292b45'),
+    'monochrome': ('#f1f3f2', '#c6ceca', '#899791', '#52615c', '#26312d'),
+    'binary': ('#ebedf0', '#216e39'),
+}
+
+
+def _interpolate_colors(colors: Sequence[str], size: int) -> List[str]:
+    """Interpolate CSS-compatible colors to an exact range size."""
+    normalized = [to_hex(color) for color in colors]
+    if not normalized:
+        raise ValueError('color range must contain at least one color')
+    if size == 0:
+        return []
+    if len(normalized) == 1:
+        return normalized * size
+    if size == len(normalized):
+        return normalized
+
+    cmap = LinearSegmentedColormap.from_list('lesley_custom', normalized)
+    positions = [0.5] if size == 1 else np.linspace(0, 1, size)
+    return [to_hex(cmap(value)) for value in positions]
+
+
+def color_palette(cmap: Palette = 'github',
+                  size: int = 5,
+                  *,
+                  color_range: Optional[Sequence[str]] = None,
+                  binary: bool = False) -> List[str]:
+    """Resolve a named palette, Matplotlib colormap, or custom color range.
+
+    ``color_range`` takes precedence over ``cmap``. Custom ranges are
+    interpolated to ``size`` colors, while binary palettes always return their
+    two endpoint colors.
+    """
+    if size < 0:
+        raise ValueError('palette size cannot be negative')
+    if binary:
+        size = 2
+
+    colors: Optional[Sequence[str]] = color_range
+    if colors is None and not isinstance(cmap, str):
+        colors = cmap
+    if colors is None:
+        palette_name = cmap.casefold()
+        colors = PALETTES.get(palette_name)
+
+    if colors is not None:
+        if binary and len(colors) > 1:
+            colors = (colors[0], colors[-1])
+        return _interpolate_colors(colors, size)
+
+    try:
+        matplotlib_cmap = colormaps[cmap]
+    except KeyError as exc:
+        names = ', '.join(PALETTES)
+        raise ValueError(
+            f'unknown palette {cmap!r}; use a Matplotlib colormap, '
+            f'one of [{names}], or pass color_range'
+        ) from exc
+
+    if size == 0:
+        return []
+    if binary:
+        positions = [0.0, 1.0]
+    else:
+        positions = np.linspace(0, 1, size + 2)[1:-1]
+    return [to_hex(matplotlib_cmap(value)) for value in positions]
 
 
 def make_month_mapping() -> Dict[str, str]:
@@ -102,49 +182,65 @@ def prep_data(dates: Iterable,
 
 def cal_heatmap(dates: Iterable,
                 values: Iterable,
-                cmap: str = 'YlGn',
+                cmap: Palette = 'YlGn',
                 height: int = 250,
                 days_of_week: list = ['Mon', 'Thu', 'Sun'],
-                width: Optional[int] = None) -> alt.Chart:
+                width: Optional[int] = None,
+                domain: Optional[Sequence[Union[int, float]]] = None,
+                color_range: Optional[Sequence[str]] = None,
+                binary: bool = False) -> alt.Chart:
     """
     Generate a github-style calendar-based heatmap using altair.
 
     Parameters:
         dates (pd.Series): Series of datetime objects representing the data points.
         values (list or pd.Series): List or series of values to be plotted on the heatmap.
-        cmap (str, optional): Color map to use for the heatmap. Defaults to 'YlGn'.
-        height (int, optional): Height of the heatmap in pixels. Defaults to 250.
+        cmap (str or sequence, optional): Lesley palette name, Matplotlib colormap,
+            or custom color sequence. Defaults to 'YlGn'.
+        height (int, optional): Maximum heatmap height in pixels. Defaults to 250.
         days_of_week (list, optional): The labels for 3 letters of days of week in the y axis. Default to Monday, Thursday, and Sunday.
-        width (int, optional): Width of the heatmap in pixels. If not provided, will be automatically set based on the height.
+        width (int, optional): Maximum heatmap width in pixels. If not provided,
+            it is automatically set based on the height. Cells remain square,
+            so the chart may use less than one of these bounds.
+        domain (sequence, optional): Values defining the color scale domain.
+        color_range (sequence, optional): Custom CSS colors for the scale. Takes
+            precedence over cmap and is interpolated to match the domain.
+        binary (bool, optional): Map zero to the first color and every non-zero
+            value to the last color. Defaults to False.
 
     Returns:
         altair.Chart: The generated calendar-based heatmap chart.
     """
 
-    df = prep_data(dates, values)
+    input_values = pd.Series(values)
+    df = prep_data(dates, input_values)
     mapping = make_month_mapping()
     expr = gen_expr(mapping)
 
-    domain = np.sort(np.unique(values))
-    range_ = _color_palette(cmap, len(domain))
+    if binary:
+        df['_lesley_color'] = (df['values'] != 0).astype(int)
+        color_field = '_lesley_color:O'
+        color_domain = [0, 1]
+    else:
+        color_field = 'values:Q'
+        color_domain = list(domain) if domain is not None else np.sort(input_values.dropna().unique()).tolist()
+    range_ = color_palette(cmap, len(color_domain), color_range=color_range, binary=binary)
 
-    font_size = int(height / 16)
-    cell_width = height / 12.5
-    corner_radius = height / 50
     if width is None:
         width = height * 5
 
     year = str(df['dates'].iloc[0].year)
     days = list(calendar.day_abbr)
+    weeks = df['weeks'].drop_duplicates().tolist()
+    cell_size = min(width / len(weeks), height / len(days))
+    font_size = min(height / 16, cell_size * 0.6)
+    corner_radius = min(5, cell_size * 0.2)
 
-    chart = alt.Chart(df).mark_rect(
-        cornerRadius=corner_radius,
-        width=cell_width,
-        height=cell_width
-    ).encode(
+    chart = alt.Chart(df).mark_rect(cornerRadius=corner_radius).encode(
         y=alt.Y(
             'days',
             sort=days,
+            scale=alt.Scale(domain=days, paddingInner=0.1, paddingOuter=0.05),
             axis=alt.Axis(
                 tickSize=0,
                 title='',
@@ -154,7 +250,8 @@ def cal_heatmap(dates: Iterable,
             )
         ),
         x=alt.X(
-            'weeks:N', 
+            'weeks:N',
+            scale=alt.Scale(domain=weeks, paddingInner=0.1, paddingOuter=0.05),
             axis=alt.Axis(
                 tickSize=0,
                 domain=False,
@@ -165,9 +262,9 @@ def cal_heatmap(dates: Iterable,
             )
         ),
         color=alt.Color(
-            'values',
+            color_field,
             legend=None,
-            scale=alt.Scale(domain=domain, range=range_)
+            scale=alt.Scale(domain=color_domain, range=range_)
         ),
         tooltip=[
             alt.Tooltip('dates', title='Date'),
@@ -175,10 +272,8 @@ def cal_heatmap(dates: Iterable,
         ]
     ).properties(
         title=year,
-        height=height,
-        width=width
-    ).configure_scale(
-        rectBandPaddingInner=0.1,
+        height=alt.Step(cell_size),
+        width=alt.Step(cell_size)
     ).configure_mark(
         strokeOpacity=0,
         strokeWidth=0,
@@ -197,11 +292,13 @@ def month_plot(dates: Iterable,
                labels: Optional[Iterable] = None,
                month: int = 3,
                title: str = '',
-               cmap: str = 'YlGn',
-               domain: Optional[List[Union[int, float]]] = None,
+               cmap: Palette = 'YlGn',
+               domain: Optional[Sequence[Union[int, float]]] = None,
                width: int = 250,
                height: Optional[int] = None,
-               show_date: bool = False) -> alt.Chart:
+               show_date: bool = False,
+               color_range: Optional[Sequence[str]] = None,
+               binary: bool = False) -> alt.Chart:
     """
     Generate a calendar-based heatmap plot for a single month.
     
@@ -211,17 +308,25 @@ def month_plot(dates: Iterable,
         labels (optional list): List of labels to display on top of the heatmap. If not provided, no labels will be displayed.
         month (int, optional): Month number for which the heatmap is generated. Defaults to 3 (March).
         title (str, optional): Title of the heatmap plot. If not provided, no title will be displayed.
-        cmap (str, optional): Color map to use for the heatmap. Defaults to 'YlGn'.
+        cmap (str or sequence, optional): Lesley palette name, Matplotlib colormap,
+            or custom color sequence. Defaults to 'YlGn'.
         domain (list, optional): Domain values for the color scale. If not provided, will be automatically generated based on the input data.
-        width (int, optional): Width of the heatmap plot in pixels. Defaults to 250.
-        height (int, optional): Height of the heatmap plot in pixels. If not provided, will be automatically set based on the width.
+        width (int, optional): Maximum heatmap width in pixels. Defaults to 250.
+        height (int, optional): Maximum heatmap height in pixels. If not provided,
+            it is automatically set based on the width. Month plots reserve a
+            7-by-6 grid so cells stay square and calendar layouts stay aligned.
         show_date (bool, optional): Whether to display day labels on top of the heatmap. Defaults to False.
+        color_range (sequence, optional): Custom CSS colors for the scale. Takes
+            precedence over cmap and is interpolated to match the domain.
+        binary (bool, optional): Map zero to the first color and every non-zero
+            value to the last color. Defaults to False.
 
     Returns:
         altair.Chart: The generated calendar-based heatmap chart.
     """
     
-    df = prep_data(dates, values, labels)
+    input_values = pd.Series(values)
+    df = prep_data(dates, input_values, labels)
     month_name = calendar.month_name[month]
     df_month = df[df['months'] == month_name].reset_index()
     df_month['day'] = df_month['dates'].dt.day
@@ -229,13 +334,25 @@ def month_plot(dates: Iterable,
     mapping = make_day_mapping()
     expr = gen_expr(mapping)
 
-    if domain is None:
-        domain = np.sort(np.unique(values))
-    range_ = _color_palette(cmap, len(domain))
+    if binary:
+        df_month['_lesley_color'] = (df_month['values'] != 0).astype(int)
+        color_field = '_lesley_color:O'
+        color_domain = [0, 1]
+    else:
+        color_field = 'values:Q'
+        color_domain = list(domain) if domain is not None else np.sort(input_values.dropna().unique()).tolist()
+    range_ = color_palette(cmap, len(color_domain), color_range=color_range, binary=binary)
 
-    cell_width = width * 0.1
     if height is None:
         height = int(width * 0.8)
+
+    days = list(calendar.day_abbr)
+    weeks = df_month['weeks'].drop_duplicates().tolist()
+    while len(weeks) < 6:
+        weeks.append(f'_lesley_empty_week_{len(weeks)}')
+    cell_size = min(width / len(days), height / len(weeks))
+    font_size = min(width / 20, cell_size * 0.6)
+    corner_radius = min(5, cell_size * 0.2)
 
     if labels is not None:
         tooltips = [
@@ -247,28 +364,30 @@ def month_plot(dates: Iterable,
             alt.Tooltip('values', title='Value')
         ]
     
-    days = list(calendar.day_abbr)
-    df_heatmap = df_month[df_month['values'] != 0].reset_index(drop=True)
+    if binary:
+        df_heatmap = df_month
+    else:
+        df_heatmap = df_month[df_month['values'] != 0].reset_index(drop=True)
     if len(df_heatmap) > 0:
-        chart = alt.Chart(df_heatmap).mark_rect(cornerRadius=5, width=cell_width, height=cell_width).encode(
-            alt.X('days:N', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
-            alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
-            alt.Color('values:Q', legend=None, scale=alt.Scale(domain=domain, range=range_)),
+        chart = alt.Chart(df_heatmap).mark_rect(cornerRadius=corner_radius).encode(
+            alt.X('days:N', sort=days, title='', scale=alt.Scale(domain=days, paddingInner=0.1, paddingOuter=0.05), axis=alt.Axis(tickSize=0, domain=False, labelFontSize=font_size, orient='top', labelAngle=0, labelExpr=expr)),
+            alt.Y('weeks:N', title='', scale=alt.Scale(domain=weeks, paddingInner=0.1, paddingOuter=0.05), axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
+            alt.Color(color_field, legend=None, scale=alt.Scale(domain=color_domain, range=range_)),
             tooltip=tooltips
         ).properties(
-            height=height,
-            width=width,
+            height=alt.Step(cell_size),
+            width=alt.Step(cell_size),
             title=title,
             view=alt.ViewConfig(strokeWidth=0)
         )
     else:
-        chart = alt.Chart(df_month).mark_rect(cornerRadius=5, width=cell_width, height=cell_width, opacity=0).encode(
-            alt.X('days:N', sort=days, title='', axis=alt.Axis(tickSize=0, domain=False, labelFontSize=width/20, orient='top', labelAngle=0, labelExpr=expr)),
-            alt.Y('weeks:N', title='', axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
+        chart = alt.Chart(df_month).mark_rect(cornerRadius=corner_radius, opacity=0).encode(
+            alt.X('days:N', sort=days, title='', scale=alt.Scale(domain=days, paddingInner=0.1, paddingOuter=0.05), axis=alt.Axis(tickSize=0, domain=False, labelFontSize=font_size, orient='top', labelAngle=0, labelExpr=expr)),
+            alt.Y('weeks:N', title='', scale=alt.Scale(domain=weeks, paddingInner=0.1, paddingOuter=0.05), axis=alt.Axis(tickSize=0, domain=False, labelAngle=0, labelFontSize=0)),
             tooltip=tooltips
         ).properties(
-            height=height,
-            width=width,
+            height=alt.Step(cell_size),
+            width=alt.Step(cell_size),
             title=title,
             view=alt.ViewConfig(strokeWidth=0)
         )
@@ -276,9 +395,9 @@ def month_plot(dates: Iterable,
     if show_date:
         df_month['is_weekend'] = df_month['days'].apply(lambda x: True if x in ['Sat', 'Sun'] else False)
         
-        label = alt.Chart(df_month).mark_text(baseline='middle', fontSize=width/20).encode(
-            alt.X('days', sort=days),
-            alt.Y('weeks:N'),
+        label = alt.Chart(df_month).mark_text(baseline='middle', fontSize=font_size).encode(
+            alt.X('days', sort=days, scale=alt.Scale(domain=days, paddingInner=0.1, paddingOuter=0.05)),
+            alt.Y('weeks:N', scale=alt.Scale(domain=weeks, paddingInner=0.1, paddingOuter=0.05)),
             alt.Text('day:N'),
             tooltip=alt.value(None),
             color=alt.condition(alt.datum['is_weekend'], alt.value('#ED2939'), alt.value('#000000'))
@@ -294,10 +413,12 @@ def month_plot(dates: Iterable,
 def calendar_plot(dates: Iterable,
                   values: Iterable,
                   labels: Optional[Iterable] = None,
-                  cmap: str = 'YlGn',
+                  cmap: Palette = 'YlGn',
                   nrows: int = 3,
                   show_date: bool = False,
-                  domain: Optional[List[Union[int, float]]] = None) -> alt.HConcatChart:
+                  domain: Optional[Sequence[Union[int, float]]] = None,
+                  color_range: Optional[Sequence[str]] = None,
+                  binary: bool = False) -> alt.HConcatChart:
     """
     Generate a calendar-based heatmap plot for all months of a year.
 
@@ -310,13 +431,18 @@ def calendar_plot(dates: Iterable,
         values (Iterable): A sequence of values corresponding to the dates.
         labels (Optional[Iterable], optional): A sequence of labels corresponding to the dates.
             If provided, these labels will be displayed in tooltips. Defaults to None.
-        cmap (str, optional): Color map to use for the heatmap. Defaults to 'YlGn'.
+        cmap (str or sequence, optional): Lesley palette name, Matplotlib colormap,
+            or custom color sequence. Defaults to 'YlGn'.
         nrows (int, optional): Number of rows in the grid layout. Must be a factor of 12
             (i.e., 1, 2, 3, 4, 6, or 12). Defaults to 3.
         show_date (bool, optional): Whether to display day numbers on the heatmap cells.
             Defaults to False.
         domain (Optional[List[Union[int, float]]], optional): Domain values for the color scale.
             If not provided, will be automatically determined from the values. Defaults to None.
+        color_range (sequence, optional): Custom CSS colors for the scale. Takes
+            precedence over cmap and is interpolated to match the domain.
+        binary (bool, optional): Map zero to the first color and every non-zero
+            value to the last color. Defaults to False.
 
     Returns:
         alt.HConcatChart: A horizontally concatenated chart containing the monthly heatmaps
@@ -331,17 +457,28 @@ def calendar_plot(dates: Iterable,
 
     charts = [None]*12
     for i in range(12):
-        c = month_plot(dates, values, labels, month=i+1, title=calendar.month_name[i+1], cmap=cmap, domain=domain, show_date=show_date)
+        c = month_plot(
+            dates,
+            values,
+            labels,
+            month=i+1,
+            title=calendar.month_name[i+1],
+            cmap=cmap,
+            domain=domain,
+            show_date=show_date,
+            color_range=color_range,
+            binary=binary,
+        )
         charts[i] = c
 
-    # format display - create columns first, then append them
-    ncols = int(12/nrows)
+    # Build vertical columns from a row-major month sequence.
+    ncols = 12 // nrows
     columns = []
     
     for j in range(ncols):
         column = alt.vconcat()
         for i in range(nrows):
-            column &= charts[i + j*nrows]
+            column &= charts[i * ncols + j]
         columns.append(column)
     
     # Combine all columns horizontally
@@ -354,8 +491,10 @@ def calendar_plot(dates: Iterable,
 
 def plot_calendar(year: int = 2025,
                   label_df: Optional[pd.DataFrame] = None,
-                  color: str = 'Reds',
-                  layout: str = '3x4') -> alt.HConcatChart:
+                  color: Palette = 'Reds',
+                  layout: str = '3x4',
+                  color_range: Optional[Sequence[str]] = None,
+                  binary: bool = False) -> alt.HConcatChart:
     """
     Creates an interactive calendar heatmap with a given year and optional labels.
 
@@ -368,10 +507,15 @@ def plot_calendar(year: int = 2025,
         It should have columns 'date' and optionally either 'value' and/or 'label'.
         If 'value' is not provided, it only show the label in the tooltip.
         If 'label' is not provided, it will use the 'value' column as the label.
-    color : str (optional)
-        Color palette used for the heatmap. Defaults to 'Reds'.
+    color : str or sequence (optional)
+        Lesley palette name, Matplotlib colormap, or custom color sequence.
+        Defaults to 'Reds'.
     layout : str (optional)
         Layout of the calendar heatmap in terms of rows and columns, e.g., '3x4' or '1x12'.
+    color_range : sequence (optional)
+        Custom CSS colors for the scale. Takes precedence over color.
+    binary : bool (optional)
+        Map zero to the first color and every non-zero value to the last color.
 
     Returns
     -------
@@ -414,4 +558,14 @@ def plot_calendar(year: int = 2025,
             labels = df['label_y'].tolist()
 
     nrows = int(layout[0])
-    return calendar_plot(dates, values, labels, cmap=color, nrows=nrows, show_date=True, domain=domain)
+    return calendar_plot(
+        dates,
+        values,
+        labels,
+        cmap=color,
+        nrows=nrows,
+        show_date=True,
+        domain=domain,
+        color_range=color_range,
+        binary=binary,
+    )

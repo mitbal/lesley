@@ -1,3 +1,11 @@
-from lesley.lesley import cal_heatmap, month_plot, calendar_plot, prep_data, plot_calendar
+from lesley.lesley import (
+    PALETTES,
+    cal_heatmap,
+    calendar_plot,
+    color_palette,
+    month_plot,
+    plot_calendar,
+    prep_data,
+)
 
-__version__ = '0.3.2'
+__version__ = '0.4.0'

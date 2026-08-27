@@ -52,11 +52,71 @@ class TestLesley(unittest.TestCase):
         chart = lesley.cal_heatmap(dates, values)
         self.assertIsInstance(chart, alt.Chart)
 
+        spec = chart.to_dict()
+        self.assertNotIn('width', spec['mark'])
+        self.assertNotIn('height', spec['mark'])
+        self.assertEqual(spec['encoding']['x']['scale']['paddingInner'], 0.1)
+        self.assertEqual(spec['encoding']['y']['scale']['paddingInner'], 0.1)
+        self.assertEqual(spec['width']['step'], spec['height']['step'])
+
+    def test_handcrafted_color_palette(self):
+        self.assertIn('github', lesley.PALETTES)
+        self.assertEqual(
+            lesley.color_palette('github', 5),
+            list(lesley.PALETTES['github'])
+        )
+        self.assertEqual(
+            lesley.color_palette('OCEAN', 2),
+            [lesley.PALETTES['ocean'][0], lesley.PALETTES['ocean'][-1]]
+        )
+
+    def test_custom_color_range(self):
+        colors = lesley.color_palette(
+            'github',
+            4,
+            color_range=['#f8fafc', '#0f766e']
+        )
+        self.assertEqual(len(colors), 4)
+        self.assertEqual(colors[0], '#f8fafc')
+        self.assertEqual(colors[-1], '#0f766e')
+
+        direct_colors = lesley.color_palette(['#fff7ed', '#9a3412'], 2)
+        self.assertEqual(direct_colors, ['#fff7ed', '#9a3412'])
+
+    def test_binary_color_scale(self):
+        dates = pd.to_datetime(['2024-03-01', '2024-03-02'])
+        chart = lesley.month_plot(
+            dates,
+            [0, 7],
+            month=3,
+            binary=True,
+            color_range=['#eeeeee', '#112233']
+        )
+        color = chart.to_dict()['encoding']['color']
+
+        self.assertEqual(color['field'], '_lesley_color')
+        self.assertEqual(color['type'], 'ordinal')
+        self.assertEqual(color['scale']['domain'], [0, 1])
+        self.assertEqual(color['scale']['range'], ['#eeeeee', '#112233'])
+
+    def test_unknown_color_palette(self):
+        with self.assertRaisesRegex(ValueError, 'unknown palette'):
+            lesley.color_palette('not-a-palette', 3)
+
     def test_month_plot(self):
         dates = pd.to_datetime(['2024-03-01', '2024-03-03', '2024-03-05'])
         values = [10, 20, 30]
         chart = lesley.month_plot(dates, values, month=3)
         self.assertIsInstance(chart, alt.Chart)
+
+        spec = chart.to_dict()
+        self.assertNotIn('width', spec['mark'])
+        self.assertNotIn('height', spec['mark'])
+        self.assertEqual(spec['encoding']['x']['scale']['paddingInner'], 0.1)
+        self.assertEqual(spec['encoding']['y']['scale']['paddingInner'], 0.1)
+        self.assertEqual(spec['width']['step'], spec['height']['step'])
+        self.assertEqual(len(spec['encoding']['x']['scale']['domain']), 7)
+        self.assertEqual(len(spec['encoding']['y']['scale']['domain']), 6)
 
         #Test Labels
         labels = ['A','B','C']
@@ -73,6 +133,27 @@ class TestLesley(unittest.TestCase):
         values = [10, 20, 30]
         chart = lesley.calendar_plot(dates, values, nrows=3)
         self.assertIsInstance(chart, alt.HConcatChart)
+
+        spec = chart.to_dict()
+        month_rows = [
+            [column['vconcat'][row]['title'] for column in spec['hconcat']]
+            for row in range(3)
+        ]
+        self.assertEqual(month_rows, [
+            ['January', 'February', 'March', 'April'],
+            ['May', 'June', 'July', 'August'],
+            ['September', 'October', 'November', 'December'],
+        ])
+
+        two_row_spec = lesley.calendar_plot(dates, values, nrows=2).to_dict()
+        two_month_rows = [
+            [column['vconcat'][row]['title'] for column in two_row_spec['hconcat']]
+            for row in range(2)
+        ]
+        self.assertEqual(two_month_rows, [
+            ['January', 'February', 'March', 'April', 'May', 'June'],
+            ['July', 'August', 'September', 'October', 'November', 'December'],
+        ])
 
         #test show_date = True
         chart = lesley.calendar_plot(dates, values, nrows=3, show_date = True)

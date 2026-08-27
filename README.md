@@ -4,7 +4,9 @@
 
 ![example workflow](https://github.com/mitbal/lesley/actions/workflows/publish.yml/badge.svg)
 
-Lesley is a lightweight Python package designed to create interactive, github-style, calendar-based heatmaps using altair.
+Lesley is a lightweight Python package designed to create interactive, github-style, calendar-based heatmaps using Altair. Color generation is Seaborn-free and supports Matplotlib colormaps, handcrafted Lesley palettes, custom color ranges, and binary scales.
+
+Heatmap cells remain square at every chart size. The `width` and `height` arguments act as maximum bounds, allowing Lesley to fit the largest square grid without cell overlap or unused plot area.
 
 ## Example Usage
 ### Plot github-style heatmap
@@ -14,6 +16,48 @@ values = np.random.randint(0, 10, size=len(dates))
 lesley.cal_heatmap(dates, values)
 ```
 ![github-styled calendar heatmap](https://raw.githubusercontent.com/mitbal/lesley/refs/heads/main/images/github_heatmap.png)
+
+### Use a handcrafted palette
+
+Lesley includes `github`, `forest`, `ocean`, `ember`, `berry`, `dusk`, `monochrome`, and `binary` palettes. Existing Matplotlib names such as `YlGn`, `Reds`, and `viridis` remain supported.
+
+```python
+lesley.cal_heatmap(dates, values, cmap='ocean')
+```
+
+The palette colors are also available through `lesley.PALETTES` and `lesley.color_palette()`.
+
+### Define a custom color range
+
+Pass CSS-compatible colors with `color_range`. Lesley interpolates the colors to match the color domain.
+
+```python
+lesley.cal_heatmap(
+    dates,
+    values,
+    domain=[0, 2, 4, 6, 8],
+    color_range=['#f8fafc', '#5eead4', '#115e59'],
+)
+```
+
+A color sequence can also be passed directly as `cmap`:
+
+```python
+lesley.month_plot(dates, values, cmap=['#fff7ed', '#fdba74', '#9a3412'])
+```
+
+### Use binary colors
+
+Set `binary=True` to map zero values to the first color and all non-zero values to the second. This is useful for presence, completion, holiday, and event calendars.
+
+```python
+lesley.cal_heatmap(
+    dates,
+    values,
+    binary=True,
+    color_range=['#ebedf0', '#216e39'],
+)
+```
 
 ### Plot empty calendar
 ```python
